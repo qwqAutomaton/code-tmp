@@ -1,84 +1,98 @@
 #include <iostream>
-using type = int;
-struct num
+using ll = long long;
+ll iSqr;
+struct comp
 {
-    type r, i;
-    num(type r = 0, type i = 0): r(r), i(i) {}
+    ll x, y;
+    comp(ll r = 0, ll i = 0)
+        : x(r), y(i) {}
 };
-type i_sqr; // i^2
-type randgen(type mod)
+inline comp mulmod(comp a, comp b, ll p)
 {
-    return (rand()) % mod;
+    return comp(
+        (a.x * b.x % p + a.y * b.y % p * iSqr % p) % p,
+        (a.x * b.y % p + a.y * b.x % p) % p
+    );
 }
-num mul(num a, num b, type p)
+inline comp qpow(comp a, ll b, ll p)
 {
-    return num((a.r * b.r % p + a.i * b.i % p * i_sqr % p) % p, (a.r * b.i % p + a.i * b.r % p) % p);
-}
-type qpow(type a, type n, type p)
-{
-    type res = 1;
-    while (n)
+    comp res(1, 0);
+    while (b)
     {
-        if (n & 1)
-            (res *= a) %= p;
-        (a *= a) %= p;
-        n >>= 1;
+        if (b & 1)
+            res = mulmod(res, a, p);
+        a = mulmod(a, a, p);
+        b >>= 1;
     }
     return res;
 }
-num qpow(num a, type n, type p)
+inline ll qpow(ll a, ll b, ll p)
 {
-    num res(1, 0);
-    while (n)
+    a %= p;
+    ll res = 1;
+    while (b)
     {
-        if (n & 1)
-            res = mul(res, a, p);
-        a = mul(a, a, p);
-        n >>= 1;
+        if (b & 1)
+            (res *= a) %= p;
+        (a *= a) %= p;
+        b >>= 1;
     }
-    return mul(res, num(1, 0), p);
+    return res;
 }
-type cipolla(type n, type p) // x^2 = n (mod p)
+inline ll legendre(ll n, ll p)
+{
+    return qpow(n, (p - 1) >> 1, p) % p;
+}
+inline ll randgen(ll p)
+{
+    return (rand()) % p;
+}
+ll cipolla(ll n, ll p)
 {
     n %= p;
-    if (p == 2)
-        return n;
-    if (qpow(n, (p + 1) >> 1, p) == p - 1)
+    if (!n)
+        return 0;
+    if (legendre(n, p) == p - 1)
         return -1;
-    type a;
+    ll a;
     while (1)
     {
         a = randgen(p);
-        std::clog << "Generated a = " << a << '\n';
-        if (qpow(a, (p + 1) >> 1, p) == p - 1)
+        ll w = (a * a % p - n + p) % p;
+        if (legendre(w, p) == p - 1)
             break;
     }
-    i_sqr = (a * a % p - n + p) % p;
-    return qpow(num(a, 1), (p + 1) >> 1, p).r % p;
+    iSqr = (a * a % p - n + p) % p;
+    comp res = qpow(comp(a, 1), (p + 1) >> 1, p);
+    return res.x;
+}
+void solve(ll n, ll p)
+{
+    ll qr1 = cipolla(n, p);
+    if (qr1 == -1)
+    {
+        std::cout << "Hola!\n";
+        return;
+    }
+    else if (qr1)
+    {
+        ll qr2 = p - qr1;
+        std::cout << std::min(qr1, qr2) << ' ' << std::max(qr1, qr2) << '\n';
+        return;
+    }
+    else
+        std::cout << "0\n";
 }
 int main()
 {
-    freopen("log", "w", stderr);
     int t;
     std::cin >> t;
-    for (int i = 1; i <= t; i++)
+    while (t--)
     {
-        std::cout << "Case #" << i << ": \n";
-        type n, p;
+        ll n, p;
         std::cin >> n >> p;
-        type qr1 = cipolla(n, p);
-        if (qr1 == -1)
-        {
-            std::cout << "Hola!\n";
-            continue;
-        }
-        type qr2 = (p * 2 - qr1) % p;
-        if (qr1 == qr2)
-            std::cout << qr1 << '\n';
-        else
-            std::cout << std::min(qr1, qr2) << ' ' << std::max(qr1, qr2) << '\n';
+        solve(n, p);
     }
-    std::cout.flush();
     return 0;
 }
 
