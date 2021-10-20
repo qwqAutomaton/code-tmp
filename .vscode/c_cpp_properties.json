@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${default}"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x64",
+            "compilerPath": "R:\\mingw64\\bin\\g++.exe"
+        },
+        {
+            "name": "Win32-Asio",
+            "includePath": [
+                "${default}",
+                ""
+            ]
+        }
+    ],
+    "version": 4
+}
