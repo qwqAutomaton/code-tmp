@@ -5,12 +5,12 @@
     "tasks": [
         {
             "label": "g++ compile",
-            "command": "R:\\mingw64\\bin\\g++.exe",
+            "command": "/usr/bin/g++",
             "args": [
                 "-g3",
                 "${file}",
                 "-o",
-                "${file}.exe"
+                "${file}.out"
             ],
             "problemMatcher": {
                 "owner": "cpp",

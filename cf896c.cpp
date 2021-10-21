@@ -1,67 +1,54 @@
 #include <algorithm>
 #include <iostream>
-#include <cstdlib>
-#include <cstdio>
 #include <vector>
 #include <set>
-#define iter std::set<node>::iterator
-namespace IO
+class DataGen
 {
-    inline void read(int &x)
-    {
-        x = 0;
-        char chr = getchar();
-        while (!isdigit(chr))
-            chr = getchar();
-        while (isdigit(chr))
-            x = x * 10 + (chr & 15), chr = getchar();
-    }
-    inline void read(long long &x)
-    {
-        x = 0;
-        char chr = getchar();
-        while (!isdigit(chr))
-            chr = getchar();
-        while (isdigit(chr))
-            x = x * 10 + (chr & 15), chr = getchar();
-    }
-    inline void writeln(int &x)
-    {
-        printf("%d\n", x);
-    }
-    inline void writeln(long long &x)
-    {
-        printf("%lld\n", x);
-    }
-}
-namespace Datagen
-{
+private:
     long long seed, vmax;
-    inline void init()
+    inline long long getrand()
     {
-        IO::read(seed);
-        IO::read(vmax);
-    }
-    inline int rand()
-    {
-        int ret = seed;
-        seed = (seed * 7LL + 13) % 1000000007;
+        long long ret = seed;
+        seed = (seed * 7 + 13) % 1000000007;
         return ret;
     }
-    inline int genmod(int mod = vmax) { return rand() % mod; }
-}
+
+public:
+    inline DataGen()
+        : seed(0), vmax(0) {}
+    inline DataGen(long long seed, long long vmax)
+        : seed(seed), vmax(vmax) {}
+    inline long long operator()(long long mod)
+    {
+        return getrand() % mod + 1;
+    }
+};
 struct node
 {
     int l, r;
     mutable long long v;
-    node(int l = 0, int r = 0, long long v = 0) : l(l), r(r), v(v) {}
+    node(int l = 0, int r = 0, long long v = 0)
+        : l(l), r(r), v(v) {}
     bool operator<(const node &n) const { return l < n.l; }
 };
 std::set<node> s;
 std::vector<node> tmp;
-inline iter split(int pos)
+inline long long qpow(long long a, int pow, long long mod)
 {
-    iter it = s.lower_bound(node(pos));
+    a %= mod;
+    long long res = 1;
+    while (pow)
+    {
+        if (pow & 1)
+            (res *= a) %= mod;
+        (a *= a) %= mod;
+        pow >>= 1;
+    }
+    return res;
+}
+inline auto split(int pos)
+{
+    auto it = s.lower_bound(node(pos));
     if (it != s.end() && it->l == pos)
         return it;
     it--;
@@ -70,74 +57,80 @@ inline iter split(int pos)
     s.insert(node(tmp.l, pos - 1, tmp.v));
     return s.insert(node(pos, tmp.r, tmp.v)).first;
 }
-inline int qpow(long long a, int p, int mod)
+inline void add(int l, int r, long long v)
 {
-    long long res = 1;
-    a %= mod;
-    while (p)
+    auto rit = split(r + 1);
+    for (auto lit = split(l); lit != rit; lit++)
+        lit->v += v;
+}
+inline void assign(int l, int r, long long v)
+{
+    auto rit = split(r + 1);
+    s.erase(split(l), rit);
+    s.insert(node(l, r, v));
+}
+inline long long queryMinK(int l, int r, int k)
+{
+    auto rit = split(r + 1);
+    tmp.clear();
+    for (auto lit = split(l); lit != rit; lit++)
+        tmp.push_back(*lit);
+    std::sort(tmp.begin(), tmp.end(), [](node a, node b) -> bool { return a.v < b.v; });
+    for (auto i : tmp)
     {
-        if (p & 1)
-            (res *= a) %= mod;
-        (a *= a) %= mod;
-        p >>= 1;
+        k -= i.r - i.l + 1;
+        if (k <= 0)
+            return i.v;
     }
-    return res;
+    return -1;
+}
+inline long long queryPowsum(int l, int r, int pow, long long mod)
+{
+    auto rit = split(r + 1);
+    long long ret = 0;
+    for (auto lit = split(l); lit != rit; lit++)
+        (ret += (lit->r - lit->l + 1LL) % mod * qpow(lit->v, pow, mod) % mod) %= mod;
+    return ret;
 }
 int main()
 {
     int n, m;
-    IO::read(n);
-    IO::read(m);
-    Datagen::init();
+    std::cin >> n >> m;
+    long long seed, vmax;
+    std::cin >> seed >> vmax;
+    DataGen rng(seed, vmax);
     for (int i = 1; i <= n; i++)
-        s.emplace(i, i, Datagen::genmod() + 1);
+        s.insert(node(i, i, rng(vmax)));
     for (int i = 1; i <= m; i++)
     {
-        int op = Datagen::genmod(4) + 1, l = Datagen::genmod(n) + 1, r = Datagen::genmod(n) + 1;
-        int x, y;
+        int op, l, r;
+        long long x, y;
+        op = rng(4);
+        l = rng(n);
+        r = rng(n);
         (l > r) && (std::swap(l, r), true);
         if (op == 3)
-            x = Datagen::genmod(r - l + 1) + 1;
+            x = rng(r - l + 1);
         else
-            x = Datagen::genmod() + 1;
+            x = rng(vmax);
         if (op == 4)
-            y = Datagen::genmod() + 1;
-        iter rit = split(r + 1);
+            y = rng(vmax);
         switch (op)
         {
         case 1:
-            for (iter lit = split(l); lit != rit; lit++)
-                lit->v += x;
+            add(l, r, x);
             break;
         case 2:
-            s.erase(split(l), rit);
-            s.insert(node(l, r, x));
+            assign(l, r, x);
             break;
         case 3:
-        {
-            for (iter lit = split(l); lit != rit; lit++)
-                tmp.push_back(*lit);
-            std::sort(tmp.begin(), tmp.end());
-            for (std::vector<node>::iterator it = tmp.begin(); it != tmp.end(); it++)
-                if (x -= (it->r - it->l + 1) <= 0)
-                {
-                    IO::writeln(it->v);
-                    break;
-                }
-            tmp.clear();
+            std::cout << /*"QMinK[" << l << ", " << r << "] : " << x << " = " << */queryMinK(l, r, x) << '\n';
             break;
-        }
         case 4:
-        {
-            long long res = 0;
-            for (iter lit = split(l); lit != rit; lit++)
-                (res += (lit->r - lit->l + 1) * qpow(lit->v, x, y) % y) %= y;
-            IO::writeln(res);
+            std::cout << /*"QPSum[" << l << ", " << r << "] : ^" << x << ", %" << y << " = " << */queryPowsum(l, r, x, y) << '\n';
             break;
-        }
         default:
-            std::cerr << "DLLXL!" << std::endl;
-            return -1;
+            return 1;
             break;
         }
     }

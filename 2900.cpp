@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 #include <queue>
+#define int long long
 const int MAXN = 100010;
 struct land
 {
@@ -20,7 +21,7 @@ double slope(int i, int j)
 {
     return 1.0 * (f[i] - f[j]) / (l[j + 1].w - l[i + 1].w);
 }
-int main()
+signed main()
 {
     int n;
     std::deque<int> q;
