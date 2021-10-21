@@ -1,99 +1,73 @@
 #include <iostream>
-const int MAXN = 100010, MAXB = 350, BLOCK = 300;
-void modify(int l, int r, int x);
-int query(int l, int r, int x);
-int a[MAXN], pre[MAXN], f[MAXB][MAXN], fa[MAXB][MAXN], block[MAXN], tag[MAXB], max[MAXB], val[MAXN];
-inline int getL(int num) { return (num - 1) * BLOCK + 1; }                // OK
-inline int getR(int num) { return num * BLOCK; }                          // OK
-inline int root(int x) { return x ^ pre[x] ? pre[x] = root(pre[x]) : x; } // OK
-inline void initblock(int num)                                            // OK
+#define forinblock(_i, _num) for (int _i = getL(_num), __r = getR(_num); _i <= __r; _i++)
+
+const int MAXB = 510, MAXN = 200010, BLEN = 400;
+
+struct node
 {
-    max[num] = 0;
-    int rpos = getR(num);
+    int root, cnt;
+} g[MAXB][MAXN];
+int n, q;
+int block[MAXN], max[MAXN], tag[MAXN];
+int pre[MAXN], val[MAXN];
+int a[MAXN];
+inline int getL(int num) { return (num - 1) * BLEN + 1; }
+inline int getR(int num) { return num * BLEN; }
+inline int root(int x) { return x == pre[x] ? x : pre[x] = root(pre[x]); }
+inline void pushdown(int num)
+{
+    for (int i = getL(num), __r = getR(num); i <= __r; i++)
+    {
+        a[i] = val[root(i)];
+        g[num][a[i]].cnt = g[num][a[i]].root = 0;
+        a[i] -= tag[num];
+    }
     tag[num] = 0;
-    for (int lpos = getL(num); lpos <= rpos; lpos++)
+    for (int i = getL(num), __r = getR(num); i <= __r; i++)
+        pre[i] = 0;
+}
+inline void buildblock(int num)
+{
+    tag[num] = max[num] = 0;
+    for (int i = getL(num), __r = getR(num); i <= __r; i++)
     {
-        max[num] = std::max(max[num], a[lpos]);
-        f[num][a[lpos]]++;
-        if (fa[num][a[lpos]])
-            pre[lpos] = fa[num][a[lpos]];
+        max[num] = std::max(max[num], a[i]);
+        g[num][a[i]].cnt++;
+        if (g[num][a[i]].root)
+            pre[i] = g[num][a[i]].root;
         else
-            pre[lpos] = fa[num][a[lpos]] = lpos, val[lpos] = a[lpos];
+            val[i] = a[i],
+            g[num][a[i]].root = pre[i] = i;
     }
 }
-inline void merge(int b, int x, int y) // x <-> y in block #b // OK
+inline void merge(int num, int x, int y)
 {
-    if (fa[b][y])
-        pre[fa[b][x]] = fa[b][y];
+    node &a = g[num][x], &b = g[num][y];
+    if (b.root)
+        pre[a.root] = b.root;
     else
-        fa[b][y] = fa[b][x], val[fa[b][x]] = y;
-    f[b][y] += f[b][x];
-    f[b][x] = fa[b][x] = 0;
+        b.root = a.root, val[a.root] = y;
+    b.cnt += a.cnt;
+    a.cnt = a.root = 0;
 }
-inline void pushdown(int x) // OK
+inline void addtag(int num, int v)
 {
-    int rpos = getR(x);
-    for (int lpos = getL(x); lpos <= rpos; lpos++)
+    if (v <= max[num] - tag[num] - v)
     {
-        a[lpos] = val[root(lpos)];
-        fa[x][a[lpos]] = f[x][a[lpos]] = 0;
-        a[lpos] -= tag[x];
-    }
-    tag[x] = 0;
-    for (int lpos = getL(x); lpos <= rpos; lpos++)
-        pre[lpos] = 0;
-}
-inline void addtag(int x, int v) // block #x globally -v // OK
-{
-    if (v <= max[x] - tag[x] - v)
-    {
-        for (int i = tag[x] + 1; i <= tag[x] + v; i++)
-            if (fa[x][i])
-                merge(x, i, i + v);
-        tag[x] += v;
+        for (int i = tag[num] + 1; i <= tag[num] + v; i++)
+            if (g[num][i].root)
+                merge(num, i, i + v);
+        tag[num] += v;
     }
     else
     {
-        for (int i = max[x]; i > tag[x] + v; i--)
-            if (fa[x][i])
-                merge(x, i, i - v);
-        max[x] = std::min(max[x], tag[x] + v);
+        for (int i = max[num]; i > tag[num] + v; i--)
+            if (g[num][i].root)
+                merge(num, i, i - v);
+        max[num] = std::min(max[num], tag[num] + v);
     }
 }
-signed main()
-{
-    freopen("in", "r", stdin);
-    freopen("out", "w", stdout);
-    std::ios::sync_with_stdio(false);
-    int n, m;
-    std::cin >> n >> m;
-    for (int i = 1; i <= n; i++)
-    {
-        std::cin >> a[i];
-        block[i] = (i - 1) / BLOCK + 1;
-    }
-    for (int i = block[1]; i <= block[n]; i++)
-        initblock(i);
-    for (int i = 1, op, l, r, x; i <= m; i++)
-    {
-        std::cin >> op >> l >> r >> x;
-        switch (op)
-        {
-        case 1:
-            modify(l, r, x);
-            break;
-        case 2:
-            std::cout << query(l, r, x) << '\n';
-            break;
-        default:
-            std::cerr << "qwq\n";
-            break;
-        }
-    }
-    std::cout.flush();
-    return 0;
-}
-void modify(int l, int r, int x) // OK
+inline void modify(int l, int r, int x)
 {
     int lblock = block[l], rblock = block[r];
     pushdown(lblock);
@@ -107,39 +81,63 @@ void modify(int l, int r, int x) // OK
         for (; r >= rblockl; r--)
             if (a[r] > x)
                 a[r] -= x;
-        for (int b = lblock + 1; b <= rblock - 1; b++)
-            addtag(b, x);
-        initblock(lblock);
-        initblock(rblock);
+        for (int blk = lblock + 1; blk <= rblock - 1; blk++)
+            addtag(blk, x);
+        buildblock(lblock);
+        buildblock(rblock);
     }
     else
     {
         for (; l <= r; l++)
             if (a[l] > x)
                 a[l] -= x;
-        initblock(lblock);
+        buildblock(lblock);
     }
 }
-int query(int l, int r, int x) // OK
+inline int query(int l, int r, int x)
 {
-    int ans = 0;
-    int lblock = block[l], rblock = block[r];
+    int lblock = block[l], rblock = block[r], res = 0;
     if (lblock ^ rblock)
     {
         int lblockr = getR(lblock), rblockl = getL(rblock);
         for (; l <= lblockr; l++)
-            if (val[root(l)] == x + tag[lblock])
-                ans++;
+            if (val[root(l)] - tag[lblock] == x)
+                res++;
         for (; r >= rblockl; r--)
-            if (val[root(r)] == x + tag[rblock])
-                ans++;
-        for (int b = lblock + 1; b <= rblock - 1; b++)
-            if (x + tag[b] <= 100000)
-                ans += f[b][x + tag[b]];
+            if (val[root(r)] - tag[rblock] == x)
+                res++;
+        for (int blk = lblock + 1; blk <= rblock - 1; blk++)
+            if (x + tag[blk] <= 100000)
+                res += g[blk][x + tag[blk]].cnt;
     }
     else
+    {
         for (; l <= r; l++)
-            if (val[root(l)] == x + tag[lblock])
-                ans++;
-    return ans;
+            if (val[root(l)] - tag[lblock] == x)
+                res++;
+    }
+    return res;
+}
+int main()
+{
+    freopen("in", "r", stdin);
+    freopen("out", "w", stdout);
+    std::ios::sync_with_stdio(false);
+    std::cin >> n >> q;
+    for (int i = 1; i <= n; i++)
+    {
+        std::cin >> a[i];
+        block[i] = (i - 1) / BLEN + 1;
+    }
+    for (int i = block[1]; i <= block[n]; i++)
+        buildblock(i);
+    for (int i = 1, op, l, r, x; i <= q; i++)
+    {
+        std::cin >> op >> l >> r >> x;
+        if (op == 1)
+            modify(l, r, x);
+        else
+            std::cout << query(l, r, x) << std::endl;
+    }
+    return 0;
 }

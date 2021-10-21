@@ -22,10 +22,10 @@ void gen()
     {
         int op, l, r, x;
         op = (rng() % 2 + 2) % 2 + 1;
-        // r = (rng() % n + n) % n + 1;
-        // l = (rng() % r + r) % r + 1;
-        l = 1;
-        r = n;
+        r = (rng() % n + n) % n + 1;
+        l = (rng() % n + n) % n + 1;
+        // l = 1;
+        // r = n;
         x = (rng() % 100000 + 100000) % 100000 + 1;
         if (l > r)
             std::swap(l, r);
@@ -37,14 +37,15 @@ void gen()
 int main()
 {
     // gen();
-    int count = 500;
+    int count = 5000;
     for (int i = 1; i <= count; i++)
     {
         // if (i % 1000 == 0) std::cout << "#" << std::flush;
         std::cout << "Case #" << i << ": \n";
         gen();
         std::cout << "Running block#2...\n";
-        system("./cf896e.cpp.out");
+        if (system("./cf896e.cpp.out"))
+            std::cout << ">>> RE <<<\n";
         std::cout << "Running brute force...\n";
         system("./cf896e.bf.cpp.out");
         int ret = system("diff out ans");

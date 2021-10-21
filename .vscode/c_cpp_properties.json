@@ -8,14 +8,17 @@
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-gcc-x64",
-            "compilerPath": "R:\\mingw64\\bin\\g++.exe"
+            "compilerPath": "R:\\mingw64\\bin\\gcc.exe"
         },
         {
-            "name": "Win32-Asio",
+            "name": "Linux/Ubuntu",
             "includePath": [
-                "${default}",
-                ""
-            ]
+                "${default}"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/usr/bin/gcc"
         }
     ],
     "version": 4
