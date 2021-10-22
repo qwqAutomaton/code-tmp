@@ -1,7 +1,7 @@
 #include <iostream>
 #define forinblock(_i, _num) for (int _i = getL(_num), __r = getR(_num); _i <= __r; _i++)
 
-const int MAXB = 510, MAXN = 200010, BLEN = 400;
+const int MAXB = 510, MAXN = 120010, BLEN = 300;
 
 struct node
 {

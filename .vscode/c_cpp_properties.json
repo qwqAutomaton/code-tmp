@@ -19,6 +19,17 @@
             "cppStandard": "c++17",
             "intelliSenseMode": "linux-gcc-x64",
             "compilerPath": "/usr/bin/gcc"
+        },
+        {
+            "name": "Linux/asio",
+            "includePath": [
+                "${default}",
+                "/home/wzms/code/asio-1.18.2/include"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/usr/bin/gcc"
         }
     ],
     "version": 4
