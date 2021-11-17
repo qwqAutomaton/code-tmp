@@ -10,7 +10,11 @@
                 "-g3",
                 "${file}",
                 "-o",
-                "${file}.out"
+                "${file}.out",
+                "-Wall",
+                "-Wextra",
+                "-fsanitize=undefined",
+                "-DVSCODE_DEBUG"
             ],
             "problemMatcher": {
                 "owner": "cpp",

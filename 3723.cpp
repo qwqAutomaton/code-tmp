@@ -1,72 +1,93 @@
+#include <algorithm>
 #include <iostream>
-#include <complex>
-using comp = std::complex<long double>;
-const int MAXN = 500010;
-namespace DFT
+#include <cmath>
+#define int long long
+const int MOD = 998244353, MAXN = 100010, G = 3, invG = 332748118;
+int tr[MAXN << 2];
+inline int qpow(int a, int b = MOD - 2)
 {
-int tr[MAXN << 3];
-void FFT(comp *f, int n, bool rev = false)
+    int ret = 1;
+    while (b)
+    {
+        if (b & 1)
+            (ret *= a) %= MOD;
+        (a *= a) %= MOD;
+        b >>= 1;
+    }
+    return ret;
+}
+void NTT(int *f, int n, bool rev = false)
 {
-    tr[0] = 0;
-    for (int i = 1; i <= n; i++)
+    for (int i = 0; i < n; i++)
         tr[i] = (tr[i >> 1] >> 1) | (i & 1 ? n >> 1 : 0);
+    for (int i = 0; i < n; i++)
+        if (i < tr[i])
+            std::swap(f[i], f[tr[i]]);
     for (int l = 2; l <= n; l <<= 1)
     {
-        comp omega(cos(2 * M_PI / l), sin(2 * M_PI * (rev ? -1 : 1) / l));
+        int root = qpow(rev ? G : invG, (MOD - 1) / l);
         for (int k = 0; k < n; k += l)
         {
-            comp cur(1, 0);
+            int cur = 1;
             for (int i = k; i < k + (l >> 1); i++)
             {
-                comp qwq = cur * f[i + (l >> 1)];
+                int qwq = cur * f[i + (l >> 1)] % MOD;
                 f[i + (l >> 1)] = f[i] - qwq;
+                if (f[i + (l >> 1)] < 0)
+                    f[i + (l >> 1)] += MOD;
                 f[i] += qwq;
-                cur *= omega;
+                if (f[i] >= MOD)
+                    f[i] -= MOD;
+                (cur *= root) %= MOD;
             }
         }
     }
     if (rev)
     {
+        int invs = qpow(n);
         for (int i = 0; i < n; i++)
-            f[i] /= n;
+            (f[i] *= invs) %= MOD;
     }
 }
-}
-comp f[MAXN << 3], g[MAXN << 3];
-int n, m;
-long long sqrsumF = 0, sqrsumG = 0, sumF = 0, sumG = 0;
-int main()
+int f[MAXN << 2], g[MAXN << 2];
+int getMin(int a, int b)
 {
+    double pos = -b / (2.0 * a);
+    int pos1 = floor(pos), pos2 = ceil(pos);
+    return std::min(a * pos2 * pos2 + b * pos2, a * pos1 * pos1 + b * pos1);
+}
+signed main()
+{
+    int n, m;
     std::cin >> n >> m;
-    for (int i = 0, a; i < n; i++)
+    for (int i = 1; i <= n; i++)
+        std::cin >> f[i];
+    for (int i = 1; i <= n; i++)
     {
-        std::cin >> a;
-        f[i].real(a);
-        sqrsumF += a * a;
-        sumF += a;
+        std::cin >> g[i];
+        g[i + n] = g[i];
     }
-    for (int i = 0, a; i < n; i++)
+    std::reverse(g + 1, g + 1 + n * 2);
+    int f2 = 0, f1 = 0, g2 = 0, g1 = 0;
+    for (int i = 1; i <= n; i++)
     {
-        std::cin >> a;
-        g[n - i].real(a);
-        g[n + n - i].real(a);
-        sqrsumG += a * a;
-        sumG += a;
+        f2 += f[i] * f[i];
+        g2 += g[i] * g[i];
+        f1 += f[i];
+        g1 += g[i];
     }
     int lim = 1;
-    while (lim < 3 * n)
+    while (lim <= n * 3)
         lim <<= 1;
-    DFT::FFT(f, lim);
-    DFT::FFT(g, lim);
-    for (int i = 1; i <= n; i++)
-        f[i] *= g[i];
-    DFT::FFT(f, lim, 1);
-    long long mxval = -1;
-    for (int i = n; i < n << 1; i++)
-        mxval = std::max(mxval, (long long)(floor(f[i].real() + 0.5)));
-    long long xval1 = floor((sumF - sumG) / n), xval2 = ceil((sumF - sumG) / n);
-    long long ans = std::min(n * xval1 * xval1 + 2 * (sumF - sumG) * xval1, n * xval2 * xval2 + 2 * (sumF - sumG) * xval2) + sqrsumF + sqrsumG - mxval;
-    std::cout << ans << std::endl;
+    NTT(f, lim);
+    NTT(g, lim);
+    for (int i = 0; i < lim; i++)
+        (f[i] *= g[i]) %= MOD;
+    NTT(f, lim, 1);
+    int ans = -1;
+    for (int i = 0; i <= n; i++)
+        ans = std::max(ans, f[i + 1 + n]);
+    int qwq = getMin(n, 2 * (f1 - g1)), ovo = f2 + g2;
+    std::cout << ovo + qwq - ans * 2 << std::endl;
     return 0;
 }
-
