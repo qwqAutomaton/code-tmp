@@ -121,7 +121,7 @@ inline int query(int l, int r, int x)
 int main()
 {
     freopen("in", "r", stdin);
-    freopen("out", "w", stdout);
+    freopen("ans", "w", stdout);
     std::ios::sync_with_stdio(false);
     std::cin >> n >> q;
     for (int i = 1; i <= n; i++)
